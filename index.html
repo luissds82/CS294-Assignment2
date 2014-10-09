@@ -8,6 +8,21 @@
 	<script src="http://d3js.org/d3.v3.min.js"> </script>
 </head>
 
+<style>
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.timeseries_daily_line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+</style>
+
 <body>
 	
 	<script>
@@ -77,7 +92,7 @@
     }
     
     // Called once the daily timeseries CSV has been loaded.
-    function on_daily_timeseries_summary(error, rows) {
+    function on_daily_data(error, rows) {
         console.log(rows)
         // TODO: timeseries rendering
         
@@ -96,7 +111,7 @@
             })
             
             return obj
-        }).get(on_daily_timeseries_summary);
+        }).get(on_daily_data);
                   
 	</script>
 
