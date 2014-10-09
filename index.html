@@ -16,9 +16,19 @@
   shape-rendering: crispEdges;
 }
 
-.timeseries_daily_line {
+.daily_line {
   fill: none;
-  stroke: steelblue;
+  stroke-width: 0.5px;
+}
+
+.max {
+  stroke: red;
+}
+.min {
+  stroke: blue;
+}
+.avg {
+  stroke: black;
   stroke-width: 1.5px;
 }
 </style>
@@ -44,6 +54,9 @@
         );
     };
     
+    // Acknowledgements
+    // Line graph templates shamelessly lifted from http://bl.ocks.org/mbostock/3883245
+    
     // Actual code
 	var rezised_body = d3.selectAll("body")
 							.style("height", 100 + "%"); //just to force the browser to recognize the height of the screen
@@ -57,15 +70,10 @@
 	var bar_graph_width = 100 - line_graph_width; //That is why I abstract it into variables
 
 	//SVG Canvas for each graph///
-	var line_graph_canvas = rezised_body.append("svg")
+	var daily_timeseries_svg = rezised_body.append("svg")
 								.attr("width", line_graph_width + "%")
 								.attr("height", line_graph_height + "%")
 								.style("float", "left"); // the trick to make them side by side
-
-	var rect = line_graph_canvas.append("rect") //NOTE: This is Aux Code - just to test the canvas for the line graph is ok
-								.attr("width", 100 + "%")
-								.attr("height", 100 + "%")
-								.attr("fill", "grey");
 
 	var bar_graph_canvas = rezised_body.append("svg")
 								.attr("width", bar_graph_width + "%")
@@ -77,6 +85,27 @@
 								.attr("fill", "blue")
 								.style("float", "left");
 
+    // Axes
+    var daily_x = d3.time.scale()
+        .range([0, line_graph_width*10]);
+    var daily_y = d3.scale.linear()
+        .range([line_graph_height*10, 0]);
+    var daily_x_axis = d3.svg.axis()
+        .scale(daily_x)
+        .orient("bottom");
+    var daily_y_axis = d3.svg.axis()
+        .scale(daily_y)
+        .orient("left");
+    var daily_line_total_min = d3.svg.line()
+        .x(function(d) { return daily_x(d.day); })
+        .y(function(d) { return daily_y(d.total.min); });
+    var daily_line_total_max = d3.svg.line()
+        .x(function(d) { return daily_x(d.day); })
+        .y(function(d) { return daily_y(d.total.max); });
+    var daily_line_total_avg = d3.svg.line()
+        .x(function(d) { return daily_x(d.day); })
+        .y(function(d) { return daily_y(d.total.avg); });
+    
     // Load datasets
     // Returns an object of {min: ..., max:..., avg:...} parsed from the row.
     function parse_component(row_record, component_name) {
@@ -92,17 +121,58 @@
     }
     
     // Called once the daily timeseries CSV has been loaded.
+    function on_daily_timeseries_data(data) {
+        daily_x.domain(d3.extent(data, function(d) { return d.day; }));
+        daily_y.domain([0, d3.max(data, function(d) { return d.total.max; })]);
+
+        daily_timeseries_svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + line_graph_height*10 + ")")
+            .call(daily_x_axis)
+        .append("text")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Day");
+            
+        daily_timeseries_svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(20,0)")   // TODO REMOVEME WITH MARGINS
+            .call(daily_y_axis)
+        .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Energy");
+            
+        daily_timeseries_svg.append("path")
+            .datum(data)
+            .attr("class", "daily_line min")
+            .attr("d", daily_line_total_min);
+        daily_timeseries_svg.append("path")
+            .datum(data)
+            .attr("class", "daily_line max")
+            .attr("d", daily_line_total_max);
+        daily_timeseries_svg.append("path")
+            .datum(data)
+            .attr("class", "daily_line avg")
+            .attr("d", daily_line_total_avg);
+    }
+    
     function on_daily_data(error, rows) {
         console.log(rows)
-        // TODO: timeseries rendering
+        on_daily_timeseries_data(rows);
         
         // TODO: piechart / barchart aggregation and rendering
 
     }
     
+    i = 0
     d3.dsv(";", "text/plain")("data_set.csv")
         .row(function(d) { 
-            var obj = {"total":{min:0.0, max:0.0, avg:0.0}}
+            i = i + 1
+            var obj = {"day": i, "total":{min:0.0, max:0.0, avg:0.0}}
             components.forEach(function (component) {
                 obj[component] = parse_component(d, component)
                 obj.total.min += obj[component].min
