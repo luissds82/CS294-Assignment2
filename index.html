@@ -155,15 +155,24 @@
         daily_timeseries_svg.append("path")
             .datum(data)
             .attr("class", "daily_line min")
-            .attr("d", daily_line_total_min);
+            .attr("d", daily_line_total_min)
+            .attr("opacity", 0)
+            .transition()
+            .attr("opacity", 1)
         daily_timeseries_svg.append("path")
             .datum(data)
             .attr("class", "daily_line max")
-            .attr("d", daily_line_total_max);
+            .attr("d", daily_line_total_max)
+            .attr("opacity", 0)
+            .transition()
+            .attr("opacity", 1)
         daily_timeseries_svg.append("path")
             .datum(data)
             .attr("class", "daily_line avg")
-            .attr("d", daily_line_total_avg);
+            .attr("d", daily_line_total_avg)
+            .attr("opacity", 0)
+            .transition()
+            .attr("opacity", 1)
     }
     
     function on_daily_data(error, rows) {
