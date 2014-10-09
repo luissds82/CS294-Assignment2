@@ -87,10 +87,14 @@
     
     d3.dsv(";", "text/plain")("data_set.csv")
         .row(function(d) { 
-            var obj = {}
+            var obj = {"total":{min:0.0, max:0.0, avg:0.0}}
             components.forEach(function (component) {
                 obj[component] = parse_component(d, component)
+                obj.total.min += obj[component].min
+                obj.total.max += obj[component].max
+                obj.total.avg += obj[component].avg
             })
+            
             return obj
         }).get(render_daily_timeseries);
                   
