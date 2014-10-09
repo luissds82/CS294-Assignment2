@@ -93,7 +93,7 @@
 
     // Axes
     var daily_x = d3.time.scale()
-        .range([0, line_graph_width*10]);
+        .range([0, line_graph_width*10]); // TODO: absolute heights/widths
     var daily_y = d3.scale.linear()
         .range([line_graph_height*10, 0]);
     var daily_x_axis = d3.svg.axis()
