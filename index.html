@@ -77,7 +77,7 @@
     }
     
     // Called once the daily timeseries CSV has been loaded.
-    function render_daily_timeseries(error, rows) {
+    function on_daily_timeseries_summary(error, rows) {
         console.log(rows)
         // TODO: timeseries rendering
         
@@ -96,7 +96,7 @@
             })
             
             return obj
-        }).get(render_daily_timeseries);
+        }).get(on_daily_timeseries_summary);
                   
 	</script>
 
