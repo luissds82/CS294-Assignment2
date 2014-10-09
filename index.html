@@ -186,8 +186,8 @@
                 obj.total.avg += comp_obj.avg
                 obj[component] = comp_obj
 
-                soft_assert(comp_obj.min <= comp_obj.avg, "row {row} {comp} min {min} > avg {avg}".supplant({row: d, comp: component, min:comp_obj.min, avg: comp_obj.avg}))
-                soft_assert(comp_obj.avg <= comp_obj.max, "row {row} {comp} avg {avg} > max {max}".supplant({row: d, comp: component, avg:comp_obj.avg, max: comp_obj.max}))
+                soft_assert(comp_obj.min <= comp_obj.avg, "day {day} {comp} min {min} > avg {avg}".supplant({day: obj.day, comp: component, min:comp_obj.min, avg: comp_obj.avg}))
+                soft_assert(comp_obj.avg <= comp_obj.max, "day {day} {comp} avg {avg} > max {max}".supplant({day: obj.day, comp: component, avg:comp_obj.avg, max: comp_obj.max}))
             })
             
             return obj
