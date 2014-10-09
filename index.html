@@ -40,10 +40,16 @@
     // Shamelessly lifted from https://stackoverflow.com/questions/15313418/javascript-assert
     function assert(condition, message) {
         if (!condition) {
-            console.log("Assertion failed: " + (message || ""));
+            console.log("Assertion failed: " + (message || "no message"));
+            throw "Assertion failed: " + (message || "no message")
         }
     }   
     
+    function soft_assert(condition, message) {
+        if (!condition) {
+            console.log("Check failed: " + (message || "no message"));
+        }
+    }
     // Shamelessly lifted from https://stackoverflow.com/questions/1408289/best-way-to-do-variable-interpolation-in-javascript
     String.prototype.supplant = function (o) {
         return this.replace(/{([^{}]*)}/g,
@@ -174,10 +180,14 @@
             i = i + 1
             var obj = {"day": i, "total":{min:0.0, max:0.0, avg:0.0}}
             components.forEach(function (component) {
-                obj[component] = parse_component(d, component)
-                obj.total.min += obj[component].min
-                obj.total.max += obj[component].max
-                obj.total.avg += obj[component].avg
+                var comp_obj = parse_component(d, component)
+                obj.total.min += comp_obj.min
+                obj.total.max += comp_obj.max
+                obj.total.avg += comp_obj.avg
+                obj[component] = comp_obj
+
+                soft_assert(comp_obj.min <= comp_obj.avg, "row {row} {comp} min {min} > avg {avg}".supplant({row: d, comp: component, min:comp_obj.min, avg: comp_obj.avg}))
+                soft_assert(comp_obj.avg <= comp_obj.max, "row {row} {comp} avg {avg} > max {max}".supplant({row: d, comp: component, avg:comp_obj.avg, max: comp_obj.max}))
             })
             
             return obj
