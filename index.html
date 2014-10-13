@@ -32,6 +32,11 @@
   stroke: black;
   stroke-width: 1.5px;
 }
+
+.bar:hover {
+fill: brown;
+}
+
 </style>
 
 <body>
@@ -315,6 +320,7 @@
                         .data(barChartArray)
                         .enter()
                         .append("rect")
+                        .attr("class", "bar")
                         .attr("x", plot_margin2)
                         .attr("y", function (d,i){
                             return i*(bars_totalwidth / barChartArray.length);
