@@ -64,38 +64,52 @@
     // Line graph templates shamelessly lifted from http://bl.ocks.org/mbostock/3883245
     
     // Actual code
+
+    var screenHeight = screen.availHeight; //reading the screen available height - an absolute value
+    var screenWidth = screen.availWidth; //reading the screen available width - an absolute value
+    var factorWidth = 0.6; //a parameter to set the width for the right graph the daily_timeseries 
+
+
 	var rezised_body = d3.selectAll("body")
-							.style("height", 100 + "%"); //just to force the browser to recognize the height of the screen
+							.style("height", screenWidth); //reading the screen available width -  it returns pixels
 
     // Data specific variables ("the schema")
     var components = ["Cooling", "Heating", "Lighting", "Plug Loads"]
                             
 	//LAYOUT VARIABLES///
-	var line_graph_width = 60; //I'm working with screen percentages. In this way we can resize the browser window and every thing will update.
-	var line_graph_height = 95; //However if we figure that this is becoming a little bit difficult to manage we will resort to pixels
-	var bar_graph_width = 100 - line_graph_width; //That is why I abstract it into variables
 
-	//SVG Canvas for each graph///
+    var calcLineGraphWidth = function () {
+        return Math.round (screenWidth * factorWidth); //forcing the result to be an integer
+    }
+
+    var lineGraphWidth = calcLineGraphWidth();
+    var barGraphWidth = screenWidth - lineGraphWidth; 
+
+	       //var line_graph_width = 60;
+	       //var line_graph_height = 95; //OLD CODE - % based
+	       //var bar_graph_width = 100 - line_graph_width; //OLD CODE
+
+	//SVG Canvas for each graph
 	var daily_timeseries_svg = rezised_body.append("svg")
-								.attr("width", line_graph_width + "%")
-								.attr("height", line_graph_height + "%")
+								.attr("width", lineGraphWidth)
+								.attr("height", screenHeight)
 								.style("float", "left"); // the trick to make them side by side
 
 	var bar_graph_canvas = rezised_body.append("svg")
-								.attr("width", bar_graph_width + "%")
-								.attr("height", line_graph_height + "%"); // in order to be the same
+								.attr("width", barGraphWidth)
+								.attr("height", screenHeight);
 
 	var rect = bar_graph_canvas.append("rect") //NOTE: This is Aux Code - just to test if the canvas for the bar graph is ok
-								.attr("width", 100 + "%")
-								.attr("height", 100 + "%")
+								.attr("width", barGraphWidth)
+								.attr("height", screenHeight)
 								.attr("fill", "blue")
 								.style("float", "left");
 
     // Axes
     var daily_x = d3.time.scale()
-        .range([0, line_graph_width*10]); // TODO: absolute heights/widths
+        .range([0, lineGraphWidth*10]); // TODO: absolute heights/widths -  probably solved with the modifications I did
     var daily_y = d3.scale.linear()
-        .range([line_graph_height*10, 0]);
+        .range([screenHeight*10, 0]);
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom");
@@ -133,7 +147,7 @@
 
         daily_timeseries_svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(0," + line_graph_height*10 + ")")
+            .attr("transform", "translate(0," + screenHeight*10 + ")")
             .call(daily_x_axis)
         .append("text")
             .attr("y", 6)
