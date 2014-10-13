@@ -84,6 +84,7 @@
     }
 
     var lineGraphWidth = calcLineGraphWidth();
+    var lineGraphHeight = screenHeight;
 
     var barGraphWidth = screenWidth - lineGraphWidth; 
 
@@ -94,7 +95,7 @@
 	//SVG Canvas for each graph
 	var daily_timeseries_svg = rezised_body.append("svg")
 								.attr("width", lineGraphWidth)
-								.attr("height", screenHeight)
+								.attr("height", lineGraphHeight)
 								.style("float", "left"); // the trick to make them side by side
 
 	var bar_graph_canvas = rezised_body.append("svg")
@@ -111,7 +112,7 @@
     var daily_x = d3.time.scale()
         .range([0, lineGraphWidth]);
     var daily_y = d3.scale.linear()
-        .range([screenHeight, 0]);
+        .range([lineGraphHeight, 0]);
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom");
@@ -149,7 +150,7 @@
 
         daily_timeseries_svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(0," + screenHeight + ")")
+            .attr("transform", "translate(0," + lineGraphHeight + ")")
             .call(daily_x_axis)
         .append("text")
             .attr("y", 6)
@@ -199,11 +200,10 @@
 
     }
     
-    i = 0
     d3.dsv(";", "text/plain")("data_set.csv")
         .row(function(d) { 
-            i = i + 1
-            var obj = {"day": i, "total":{min:0.0, max:0.0, avg:0.0}}
+            var obj = {"day": +d.Day, "total":{min:0.0, max:0.0, avg:0.0}}
+            assert(!isNaN(obj.day), "Parse day failed: " + d)
             components.forEach(function (component) {
                 var comp_obj = parse_component(d, component)
                 obj.total.min += comp_obj.min
