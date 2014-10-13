@@ -82,7 +82,8 @@
     var calcLineGraphWidth = function () {
         return Math.round (screenWidth * factorWidth); //forcing the result to be an integer
     }
-    var plot_margin = 30
+    var plot_margin = 30;
+    var plot_margin2 = 60;
 
     // sizes including framing
     var timeseries_total_width = calcLineGraphWidth();
@@ -98,27 +99,32 @@
 		.attr("width", timeseries_total_width)
 		.attr("height", timeseries_total_height)
 		.style("float", "left"); // the trick to make them side by side
+
 	var daily_timeseries_svg = daily_timeseries_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin + ",0)")
         .style("float", "left");
-                                
-	/*var bar_graph_canvas = rezised_body.append("svg")
-		.attr("width", barGraphWidth)
-		.attr("height", screenHeight);
-
-	var rect = bar_graph_canvas.append("rect") //NOTE: This is Aux Code - just to test if the canvas for the bar graph is ok
-		.attr("width", barGraphWidth)
-		.attr("height", screenHeight)
-		.attr("fill", "blue")
-		.style("float", "left");*/
         
 	var hourly_timeseries_frame_svg = rezised_body.append("svg")
 		.attr("width", timeseries_total_width)
 		.attr("height", timeseries_total_height)
 		.style("float", "left"); // the trick to make them side by side
+
 	var hourly_timeseries_svg = hourly_timeseries_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin + ",0)")
         .style("float", "left");
+
+    var bar_graph_frame_svg = rezised_body.append("svg")
+        .attr("width", barGraphWidth - 35) //I have to subtract this value for the graph floats to the side. Do you think $(window).width() is the best way? - to fix
+        .attr("height", timeseries_total_height*2) // it should have the height of the two time series graph - - to fix
+        .style("float","left");
+
+    var bar_graph_svg = bar_graph_frame_svg.append("g")
+        .attr("transform", "translate(" + plot_margin2 + ",0)")
+        .style("float","left");
+
+    var barPadding = 15;
+
+    var bars_totalwidth = (barGraphWidth - 35) - plot_margin2; //again teh 35px that I need to subtract to force the frame of the bar svg to be side by side - - to fix
         
     // Axes
     var daily_x = d3.time.scale()
@@ -188,13 +194,15 @@
     
     // Called once the daily timeseries CSV has been loaded.
     function on_daily_timeseries_data(data) {
-        daily_timeseries_frame_svg.append("g")
+       daily_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
             .call(daily_x_axis)
         .append("text")
             .attr("y", 6)
             .attr("dy", ".71em")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "12px") 
             .style("text-anchor", "end")
             .text("Day");
             
@@ -207,6 +215,8 @@
             .attr("transform", "rotate(-90)")
             .attr("y", 6)
             .attr("dy", ".71em")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "12px") 
             .style("text-anchor", "end")
             .text("Energy");
             
@@ -240,7 +250,7 @@
         on_daily_timeseries_data(rows);
     }
     
-    function on_hourly_timeseries_data(data) {
+   function on_hourly_timeseries_data(data) {
         hourly_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
@@ -248,6 +258,8 @@
         .append("text")
             .attr("y", 6)
             .attr("dy", ".71em")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "12px") 
             .style("text-anchor", "end")
             .text("Day");     
         hourly_timeseries_frame_svg.append("g")
@@ -258,6 +270,8 @@
             .attr("transform", "rotate(-90)")
             .attr("y", 6)
             .attr("dy", ".71em")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "12px") 
             .style("text-anchor", "end")
             .text("Energy");
             
@@ -281,7 +295,7 @@
             }
             return total;
         };
-        
+
         var totalCooling= (rows.sum("Cooling"));
         var totalHeating= (rows.sum("Heating"));
         var totalLight= (rows.sum("Lighting"));
@@ -293,14 +307,59 @@
         console.log(totalPlugLoads);
         console.log(totalEnergy);
 
-        var barChartArray = [totalCooling,totalHeating,totalLight,totalPlugLoads,totalEnergy];
+        var barChartArray = [{name: "Cooling", value: totalCooling},{name: "Heating", value: totalHeating},{name: "Lighting", value: totalLight},{name:"Plug Loads", value:totalPlugLoads},{name:"Total", value:totalEnergy}];
 
         console.log(barChartArray);
 
-        //Now lets make the barChart like in the tutorial
-        
-        // TODO: piechart / barchart aggregation and rendering
+        bar_graph_svg.selectAll("rect")
+                        .data(barChartArray)
+                        .enter()
+                        .append("rect")
+                        .attr("x", plot_margin2)
+                        .attr("y", function (d,i){
+                            return i*(bars_totalwidth / barChartArray.length);
+                        })
+                        .attr("width", function(d){
+                            return d.value / 20;
+                        })
+                        .attr("height", bars_totalwidth / barChartArray.length - barPadding) 
+                        .attr("fill", "teal");
 
+        var texts =  bar_graph_svg.selectAll("text")
+                        .data(barChartArray)
+                        .enter();
+
+                        texts.append("text")
+                        .text(function (d) {
+                            return Math.round (d.value);
+                        })
+                        .attr("text-anchor", "middle")
+                        .attr("x", function (d){
+                            return (d.value / 20)/2 + plot_margin2;
+                        })
+                        .attr("y", function (d,i){
+                            return i*(bars_totalwidth / barChartArray.length) + (bars_totalwidth / barChartArray.length - barPadding)/2;
+                        })
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "12px") 
+                        .attr("fill", "white");
+
+                        texts.append("text")
+                        .text(function (d) {
+                            return d.name;
+                        })
+                        .attr("text-anchor", "right")
+                        .attr("x", function (d){
+                            return (d.value / 20) + plot_margin2 + 10;
+                        })
+                        .attr("y", function (d,i){
+                            return i*(bars_totalwidth / barChartArray.length) + (bars_totalwidth / barChartArray.length - barPadding)/2;
+                        })
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "12px") 
+                        .attr("fill", "black");
+
+        // TODO: Fix bar chart rendering -  problems: pull it to the top;
     }
     
     d3.dsv(";", "text/plain")("data_set.csv")
