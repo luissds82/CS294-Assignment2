@@ -82,37 +82,45 @@
     var calcLineGraphWidth = function () {
         return Math.round (screenWidth * factorWidth); //forcing the result to be an integer
     }
+    var plot_margin = 30
 
-    var lineGraphWidth = calcLineGraphWidth();
-    var lineGraphHeight = screenHeight;
-
-    var barGraphWidth = screenWidth - lineGraphWidth; 
+    // sizes including framing
+    var timeseries_total_width = calcLineGraphWidth();
+    var timeseries_total_height = screenHeight;
+    // raw plot size
+    var timeseries_width = timeseries_total_width - plot_margin;
+    var timeseries_height = timeseries_total_height - plot_margin;
+    
+    var barGraphWidth = screenWidth - timeseries_total_width; 
 
 	       //var line_graph_width = 60;
 	       //var line_graph_height = 95; //OLD CODE - % based
 	       //var bar_graph_width = 100 - line_graph_width; //OLD CODE
 
 	//SVG Canvas for each graph
-	var daily_timeseries_svg = rezised_body.append("svg")
-								.attr("width", lineGraphWidth)
-								.attr("height", lineGraphHeight)
-								.style("float", "left"); // the trick to make them side by side
-
+	var daily_timeseries_frame_svg = rezised_body.append("svg")
+		.attr("width", timeseries_total_width)
+		.attr("height", timeseries_total_height)
+		.style("float", "left"); // the trick to make them side by side
+	var daily_timeseries_svg = daily_timeseries_frame_svg.append("g")
+        .attr("transform", "translate(" + plot_margin + ",0)")
+        .style("float", "left");
+                                
 	var bar_graph_canvas = rezised_body.append("svg")
-								.attr("width", barGraphWidth)
-								.attr("height", screenHeight);
+		.attr("width", barGraphWidth)
+		.attr("height", screenHeight);
 
 	var rect = bar_graph_canvas.append("rect") //NOTE: This is Aux Code - just to test if the canvas for the bar graph is ok
-								.attr("width", barGraphWidth)
-								.attr("height", screenHeight)
-								.attr("fill", "blue")
-								.style("float", "left");
+		.attr("width", barGraphWidth)
+		.attr("height", screenHeight)
+		.attr("fill", "blue")
+		.style("float", "left");
 
     // Axes
     var daily_x = d3.time.scale()
-        .range([0, lineGraphWidth]);
+        .range([0, timeseries_width]);
     var daily_y = d3.scale.linear()
-        .range([lineGraphHeight, 0]);
+        .range([timeseries_height, 0]);
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom");
@@ -148,9 +156,9 @@
         daily_x.domain(d3.extent(data, function(d) { return d.day; }));
         daily_y.domain([0, d3.max(data, function(d) { return d.total.max; })]);
 
-        daily_timeseries_svg.append("g")
+        daily_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(0," + lineGraphHeight + ")")
+            .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
             .call(daily_x_axis)
         .append("text")
             .attr("y", 6)
@@ -158,9 +166,9 @@
             .style("text-anchor", "end")
             .text("Day");
             
-        daily_timeseries_svg.append("g")
+        daily_timeseries_frame_svg.append("g")
             .attr("class", "y axis")
-            .attr("transform", "translate(20,0)")   // TODO REMOVEME WITH MARGINS
+            .attr("transform", "translate(" + plot_margin + ",0)")
             .call(daily_y_axis)
         .append("text")
             .attr("transform", "rotate(-90)")
