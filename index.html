@@ -111,7 +111,15 @@
 		.attr("height", screenHeight)
 		.attr("fill", "blue")
 		.style("float", "left");
-
+        
+	var hourly_timeseries_frame_svg = rezised_body.append("svg")
+		.attr("width", timeseries_total_width)
+		.attr("height", timeseries_total_height)
+		.style("float", "left"); // the trick to make them side by side
+	var hourly_timeseries_svg = hourly_timeseries_frame_svg.append("g")
+        .attr("transform", "translate(" + plot_margin + ",0)")
+        .style("float", "left");
+        
     // Axes
     var daily_x = d3.time.scale()
         .range([0, timeseries_width]);
@@ -134,10 +142,35 @@
     var daily_line_total_avg = d3.svg.line()
         .x(function(d) { return daily_x(d.day); })
         .y(function(d) { return daily_y(d.total.avg); });
-    
+
+    var hourly_x = d3.time.scale()
+        .range([0, timeseries_width]);
+    var hourly_y = d3.scale.linear()
+        .range([timeseries_height, 0]);
+    var hourly_x_axis = d3.svg.axis()
+        .scale(hourly_x)
+        .orient("bottom")
+        .tickFormat(d3.format('.0f'));
+    var hourly_y_axis = d3.svg.axis()
+        .scale(hourly_y)
+        .orient("left")
+        .tickFormat(d3.format('.1f'));
+    var hourly_line_total_min = d3.svg.line()
+        .x(function(d) { return hourly_x(d.day); })
+        .y(function(d) { return hourly_y(d.total.min); });
+    var hourly_line_total_max = d3.svg.line()
+        .x(function(d) { return hourly_x(d.day); })
+        .y(function(d) { return hourly_y(d.total.max); });
+    var hourly_line_total_avg = d3.svg.line()
+        .x(function(d) { return hourly_x(d.day); })
+        .y(function(d) { return hourly_y(d.total.avg); });
+    var hourly_line_total = d3.svg.line()
+        .x(function(d) { return hourly_x(d.day); })
+        .y(function(d) { return hourly_y(d.total); });    
+        
     // Load datasets
     // Returns an object of {min: ..., max:..., avg:...} parsed from the row.
-    function parse_component(row_record, component_name) {
+    function parse_component_daily(row_record, component_name) {
         var obj =  {
             min: +row_record[component_name + "DailyMinimum"],
             max: +row_record[component_name + "DailyMaximum"],
@@ -206,12 +239,53 @@
 
     }
     
+    function on_hourly_timeseries_data(data) {
+        hourly_x.domain(d3.extent(data, function(d) { return d.day; }));
+        hourly_y.domain([0, d3.max(data, function(d) { return d.total; })]);
+
+        hourly_timeseries_frame_svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
+            .call(hourly_x_axis)
+        .append("text")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Day");
+            
+        hourly_timeseries_frame_svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + plot_margin + ",0)")
+            .call(hourly_y_axis)
+        .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Energy");
+            
+        hourly_timeseries_svg.append("path")
+            .datum(data)
+            .attr("class", "daily_line min")
+            .attr("d", hourly_line_total)
+            .attr("opacity", 0)
+            .transition()
+            .attr("opacity", 1)
+    }
+    function on_hourly_data(error, rows) {
+        console.log(rows)
+        on_hourly_timeseries_data(rows);
+        
+        // TODO: piechart / barchart aggregation and rendering
+
+    }
+    
     d3.dsv(";", "text/plain")("data_set.csv")
         .row(function(d) { 
             var obj = {"day": +d.Day, "total":{min:0.0, max:0.0, avg:0.0}}
             assert(!isNaN(obj.day), "Parse day failed: " + d)
             components.forEach(function (component) {
-                var comp_obj = parse_component(d, component)
+                var comp_obj = parse_component_daily(d, component)
                 obj.total.min += comp_obj.min
                 obj.total.max += comp_obj.max
                 obj.total.avg += comp_obj.avg
@@ -223,7 +297,19 @@
             
             return obj
         }).get(on_daily_data);
-                  
+             
+    d3.dsv(";", "text/plain")("data_set_hourly.csv")
+        .row(function(d) { 
+            var obj = {"day": +d.Day + d.Hour/24.0, "total":0.0}
+            assert(!isNaN(obj.day), "Parse day failed: " + d)
+            components.forEach(function (component) {
+                obj[component] = +d[component + "Hourly"]
+                obj.total += obj[component]
+                assert(!isNaN(obj[component]), "Failed to parse hourly " + component)
+            })
+            return obj
+        }).get(on_hourly_data);
+             
 	</script>
 
 </body>
