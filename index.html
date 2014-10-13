@@ -122,8 +122,10 @@
         
     // Axes
     var daily_x = d3.time.scale()
+        .domain([1, 365])
         .range([0, timeseries_width]);
     var daily_y = d3.scale.linear()
+        .domain([0, 4])
         .range([timeseries_height, 0]);
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
@@ -144,8 +146,10 @@
         .y(function(d) { return daily_y(d.total.avg); });
 
     var hourly_x = d3.time.scale()
+        .domain([1, 365])
         .range([0, timeseries_width]);
     var hourly_y = d3.scale.linear()
+        .domain([0, 4])
         .range([timeseries_height, 0]);
     var hourly_x_axis = d3.svg.axis()
         .scale(hourly_x)
@@ -184,9 +188,6 @@
     
     // Called once the daily timeseries CSV has been loaded.
     function on_daily_timeseries_data(data) {
-        daily_x.domain(d3.extent(data, function(d) { return d.day; }));
-        daily_y.domain([0, d3.max(data, function(d) { return d.total.max; })]);
-
         daily_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
@@ -240,9 +241,6 @@
     }
     
     function on_hourly_timeseries_data(data) {
-        hourly_x.domain(d3.extent(data, function(d) { return d.day; }));
-        hourly_y.domain([0, d3.max(data, function(d) { return d.total; })]);
-
         hourly_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
