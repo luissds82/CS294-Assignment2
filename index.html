@@ -6,6 +6,7 @@
 <head>
 	<title>Assignment 3</title>
 	<script src="http://d3js.org/d3.v3.min.js"> </script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 </head>
 
 <style>
@@ -65,8 +66,8 @@
     
     // Actual code
 
-    var screenHeight = screen.availHeight; //reading the screen available height - an absolute value
-    var screenWidth = screen.availWidth; //reading the screen available width - an absolute value
+    var screenHeight = $(window).height(); //reading the screen available height - an absolute value
+    var screenWidth = $(window).width(); //reading the screen available width - an absolute value
     var factorWidth = 0.6; //a parameter to set the width for the right graph the daily_timeseries 
 
 
@@ -74,7 +75,7 @@
 							.style("height", screenWidth); //reading the screen available width -  it returns pixels
 
     // Data specific variables ("the schema")
-    var components = ["Cooling", "Heating", "Lighting", "Plug Loads"]
+    var components = ["Cooling", "Heating", "Lighting", "PlugLoads"]
                             
 	//LAYOUT VARIABLES///
 
@@ -83,6 +84,7 @@
     }
 
     var lineGraphWidth = calcLineGraphWidth();
+
     var barGraphWidth = screenWidth - lineGraphWidth; 
 
 	       //var line_graph_width = 60;
@@ -107,9 +109,9 @@
 
     // Axes
     var daily_x = d3.time.scale()
-        .range([0, lineGraphWidth*10]); // TODO: absolute heights/widths -  probably solved with the modifications I did
+        .range([0, lineGraphWidth]);
     var daily_y = d3.scale.linear()
-        .range([screenHeight*10, 0]);
+        .range([screenHeight, 0]);
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom");
@@ -130,13 +132,13 @@
     // Returns an object of {min: ..., max:..., avg:...} parsed from the row.
     function parse_component(row_record, component_name) {
         var obj =  {
-            min: +row_record[component_name + " Daily Minimum"],
-            max: +row_record[component_name + " Daily Maximum"],
-            avg: +row_record[component_name + " Average "],
+            min: +row_record[component_name + "DailyMinimum"],
+            max: +row_record[component_name + "DailyMaximum"],
+            avg: +row_record[component_name + "Average "],
         }
-        assert(!isNaN(obj.min), "Parse {comp} min failed: {row}".supplant({comp: component_name, row: row_record}))
-        assert(!isNaN(obj.max), "Parse {comp} max failed: {row}".supplant({comp: component_name, row: row_record}))
-        assert(!isNaN(obj.avg), "Parse {comp} avg failed: {row}".supplant({comp: component_name, row: row_record}))
+        assert(!isNaN(obj.min), "Parse {comp} min failed:".supplant({comp: component_name}) + row_record)
+        assert(!isNaN(obj.max), "Parse {comp} max failed:".supplant({comp: component_name}) + row_record)
+        assert(!isNaN(obj.avg), "Parse {comp} avg failed:".supplant({comp: component_name}) + row_record)
         return obj
     }
     
@@ -147,7 +149,7 @@
 
         daily_timeseries_svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(0," + screenHeight*10 + ")")
+            .attr("transform", "translate(0," + screenHeight + ")")
             .call(daily_x_axis)
         .append("text")
             .attr("y", 6)
