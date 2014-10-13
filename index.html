@@ -275,12 +275,13 @@
         on_hourly_timeseries_data(rows);
         //Making the aggregate sum across each object in the array
        Array.prototype.sum = function (property) {
-            var total = 0
+            var total = 0;
             for ( var i = 0, _len = this.length; i < _len; i++ ) {
-                total += this[i][property]
+                total += this[i][property];
             }
-            return total
-        }
+            return total;
+        };
+        
         var totalCooling= (rows.sum("Cooling"));
         var totalHeating= (rows.sum("Heating"));
         var totalLight= (rows.sum("Lighting"));
@@ -296,45 +297,7 @@
 
         console.log(barChartArray);
 
-        /*Now lets make the barChart like in the tutorial
-        
-        // TODO: piechart / barchart aggregation and rendering
-
-    }
-    
-    function on_hourly_timeseries_data(data) {
-        hourly_timeseries_frame_svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
-            .call(hourly_x_axis)
-        .append("text")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Day");
-            
-        hourly_timeseries_frame_svg.append("g")
-            .attr("class", "y axis")
-            .attr("transform", "translate(" + plot_margin + ",0)")
-            .call(hourly_y_axis)
-        .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Energy");
-            
-        hourly_timeseries_svg.append("path")
-            .datum(data)
-            .attr("class", "daily_line min")
-            .attr("d", hourly_line_total)
-            .attr("opacity", 0)
-            .transition()
-            .attr("opacity", 1)
-    }
-    function on_hourly_data(error, rows) {
-        console.log(rows)
-        on_hourly_timeseries_data(rows);
+        //Now lets make the barChart like in the tutorial
         
         // TODO: piechart / barchart aggregation and rendering
 
