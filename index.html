@@ -119,10 +119,12 @@
         .range([timeseries_height, 0]);
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
-        .orient("bottom");
+        .orient("bottom")
+        .tickFormat(d3.format('.0f'));
     var daily_y_axis = d3.svg.axis()
         .scale(daily_y)
-        .orient("left");
+        .orient("left")
+        .tickFormat(d3.format('.1f'));
     var daily_line_total_min = d3.svg.line()
         .x(function(d) { return daily_x(d.day); })
         .y(function(d) { return daily_y(d.total.min); });
