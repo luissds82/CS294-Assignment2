@@ -118,8 +118,6 @@ fill: brown;
 
 	var daily_timeseries_svg = daily_timeseries_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin + ",0)")
-		.attr("width", timeseries_total_width - plot_margin)
-		.attr("height", timeseries_total_height - plot_margin)
         .style("float", "left");
         
 	var hourly_timeseries_frame_svg = rezised_body.append("svg")
@@ -127,10 +125,16 @@ fill: brown;
 		.attr("height", timeseries_total_height)
 		.style("float", "left"); // the trick to make them side by side
 
+    // Add the clip path.
+    <!-- http://bl.ocks.org/mbostock/1166403 -->
+    hourly_timeseries_frame_svg.append("clipPath")
+          .attr("id", "clip")
+        .append("rect")
+          .attr("width", timeseries_width)
+          .attr("height", timeseries_height);
 	var hourly_timeseries_svg = hourly_timeseries_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin + ",0)")
-		.attr("width", timeseries_total_width - plot_margin)
-		.attr("height", timeseries_total_height - plot_margin)
+		.attr("clip-path", "url(#clip)")
         .style("float", "left");
 
     var bar_graph_frame_svg = rezised_body.append("svg")
@@ -297,6 +301,7 @@ fill: brown;
             .attr("opacity", 0);
             
         var zoom = d3.behavior.zoom()
+            .x(hourly_x)
             .scaleExtent([1, 100])
             .on("zoom", zoomed);
         hourly_timeseries_frame_svg.call(zoom);
@@ -304,12 +309,15 @@ fill: brown;
         var zoom_dur = 500
         
         function zoomed() {
-            hourly_x.domain([1, 365/d3.event.scale])
+            //hourly_x.domain([1, 365/d3.event.scale])
+            
+            hourly_timeseries_frame_svg.select(".x.axis").call(hourly_x_axis)
+            
             hourly_timeseries_min.attr("d", hourly_line_total_min)
             hourly_timeseries_max.attr("d", hourly_line_total_max)
             hourly_timeseries_avg.attr("d", hourly_line_total_avg)
             hourly_timeseries_total.attr("d", hourly_line_total)
-            console.log(d3.event.scale)
+            console.log(d3.event.translate)
             
             if (d3.event.scale > 10 && !was_zoomed) {
                 hourly_timeseries_min.transition().duration(zoom_dur).attr("opacity", 0.2)
