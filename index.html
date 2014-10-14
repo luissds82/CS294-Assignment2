@@ -19,6 +19,12 @@
   shape-rendering: crispEdges;
 }
 
+.hourly_line {
+  fill: none;
+  stroke: purple;
+  stroke-width: 1.0px;
+}
+
 .daily_line {
   fill: none;
   stroke-width: 0.5px;
@@ -234,28 +240,17 @@ fill: brown;
             .datum(data)
             .attr("class", "daily_line min")
             .attr("d", daily_line_total_min)
-            .attr("opacity", 0)
-            .transition()
-            .attr("opacity", 1)
-
         daily_timeseries_svg.append("path")
             .datum(data)
             .attr("class", "daily_line max")
             .attr("d", daily_line_total_max)
-            .attr("opacity", 0)
-            .transition()
-            .attr("opacity", 1)
-
         daily_timeseries_svg.append("path")
             .datum(data)
             .attr("class", "daily_line avg")
             .attr("d", daily_line_total_avg)
-            .attr("opacity", 0)
-            .transition()
-            .attr("opacity", 1)
     }
     
-   function on_hourly_timeseries_data(data) {
+   function on_hourly_timeseries_data(daily_data, hourly_data) {
         hourly_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
@@ -281,12 +276,21 @@ fill: brown;
             .text("Energy");
             
         hourly_timeseries_svg.append("path")
-            .datum(data)
+            .datum(daily_data)
             .attr("class", "daily_line min")
+            .attr("d", hourly_line_total_min)
+        hourly_timeseries_svg.append("path")
+            .datum(daily_data)
+            .attr("class", "daily_line max")
+            .attr("d", hourly_line_total_max)
+        hourly_timeseries_svg.append("path")
+            .datum(daily_data)
+            .attr("class", "daily_line avg")
+            .attr("d", hourly_line_total_avg)
+        hourly_timeseries_svg.append("path")
+            .datum(hourly_data)
+            .attr("class", "hourly_line")
             .attr("d", hourly_line_total)
-            .attr("opacity", 0)
-            .transition()
-            .attr("opacity", 1)
     }
 
     function on_hourly_bar(rows) {
@@ -401,7 +405,7 @@ fill: brown;
         on_daily_timeseries_data(daily_set);
                 
         // Render Hourly Data
-        on_hourly_timeseries_data(hourly_set);
+        on_hourly_timeseries_data(daily_set, hourly_set);
         on_hourly_bar(hourly_set);
     })
 
