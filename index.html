@@ -118,6 +118,8 @@ fill: brown;
 
 	var daily_timeseries_svg = daily_timeseries_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin + ",0)")
+		.attr("width", timeseries_total_width - plot_margin)
+		.attr("height", timeseries_total_height - plot_margin)
         .style("float", "left");
         
 	var hourly_timeseries_frame_svg = rezised_body.append("svg")
@@ -127,6 +129,8 @@ fill: brown;
 
 	var hourly_timeseries_svg = hourly_timeseries_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin + ",0)")
+		.attr("width", timeseries_total_width - plot_margin)
+		.attr("height", timeseries_total_height - plot_margin)
         .style("float", "left");
 
     var bar_graph_frame_svg = rezised_body.append("svg")
@@ -226,7 +230,6 @@ fill: brown;
             .attr("class", "y axis")
             .attr("transform", "translate(" + plot_margin + ",0)")
             .call(daily_y_axis)
-
         .append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", 6)
@@ -275,22 +278,53 @@ fill: brown;
             .style("text-anchor", "end")
             .text("Energy");
             
-        hourly_timeseries_svg.append("path")
+        var hourly_timeseries_min = hourly_timeseries_svg.append("path")
             .datum(daily_data)
             .attr("class", "daily_line min")
             .attr("d", hourly_line_total_min)
-        hourly_timeseries_svg.append("path")
+        var hourly_timeseries_max = hourly_timeseries_svg.append("path")
             .datum(daily_data)
             .attr("class", "daily_line max")
             .attr("d", hourly_line_total_max)
-        hourly_timeseries_svg.append("path")
+        var hourly_timeseries_avg = hourly_timeseries_svg.append("path")
             .datum(daily_data)
             .attr("class", "daily_line avg")
             .attr("d", hourly_line_total_avg)
-        hourly_timeseries_svg.append("path")
+        var hourly_timeseries_total = hourly_timeseries_svg.append("path")
             .datum(hourly_data)
             .attr("class", "hourly_line")
             .attr("d", hourly_line_total)
+            .attr("opacity", 0);
+            
+        var zoom = d3.behavior.zoom()
+            .scaleExtent([1, 100])
+            .on("zoom", zoomed);
+        hourly_timeseries_frame_svg.call(zoom);
+        var was_zoomed = false
+        var zoom_dur = 500
+        
+        function zoomed() {
+            hourly_x.domain([1, 365/d3.event.scale])
+            hourly_timeseries_min.attr("d", hourly_line_total_min)
+            hourly_timeseries_max.attr("d", hourly_line_total_max)
+            hourly_timeseries_avg.attr("d", hourly_line_total_avg)
+            hourly_timeseries_total.attr("d", hourly_line_total)
+            console.log(d3.event.scale)
+            
+            if (d3.event.scale > 10 && !was_zoomed) {
+                hourly_timeseries_min.transition().duration(zoom_dur).attr("opacity", 0.2)
+                hourly_timeseries_max.transition().duration(zoom_dur).attr("opacity", 0.2)
+                hourly_timeseries_avg.transition().duration(zoom_dur).attr("opacity", 0.2)
+                hourly_timeseries_total.transition().duration(zoom_dur).attr("opacity", 1)
+                was_zoomed = true
+            } else if (d3.event.scale <= 10 && was_zoomed) {
+                hourly_timeseries_min.transition().duration(zoom_dur).attr("opacity", 1)
+                hourly_timeseries_max.transition().duration(zoom_dur).attr("opacity", 1)
+                hourly_timeseries_avg.transition().duration(zoom_dur).attr("opacity", 1)
+                hourly_timeseries_total.transition().duration(zoom_dur).attr("opacity", 0)
+                was_zoomed = false
+            }
+        }
     }
 
     function on_hourly_bar(rows) {
