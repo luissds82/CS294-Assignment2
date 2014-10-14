@@ -152,7 +152,7 @@ fill: brown;
         
     // Axes
     var daily_x = d3.time.scale()
-        .domain([1, 365])
+        .domain([new Date(0), new Date(365*24*60*60*1000)])
         .range([0, timeseries_width]);
     var daily_y = d3.scale.linear()
         .domain([0, 4])
@@ -160,7 +160,7 @@ fill: brown;
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom")
-        .tickFormat(d3.format('.0f'));
+        .tickFormat(d3.time.format('%b %e'));
     var daily_y_axis = d3.svg.axis()
         .scale(daily_y)
         .orient("left")
@@ -176,7 +176,7 @@ fill: brown;
         .y(function(d) { return daily_y(d.total.avg); });
 
     var hourly_x = d3.time.scale()
-        .domain([1, 365])
+        .domain([new Date(0), new Date(365*24*60*60*1000)])
         .range([0, timeseries_width]);
     var hourly_y = d3.scale.linear()
         .domain([0, 4])
@@ -184,7 +184,7 @@ fill: brown;
     var hourly_x_axis = d3.svg.axis()
         .scale(hourly_x)
         .orient("bottom")
-        .tickFormat(d3.format('.0f'));
+        .tickFormat(d3.time.format('%b %e'));
     var hourly_y_axis = d3.svg.axis()
         .scale(hourly_y)
         .orient("left")
@@ -302,36 +302,35 @@ fill: brown;
             
         var zoom = d3.behavior.zoom()
             .x(hourly_x)
-            .scaleExtent([1, 100])
+            .scaleExtent([1, 200])
             .on("zoom", zoomed);
         hourly_timeseries_frame_svg.call(zoom);
         var was_zoomed = false
         var zoom_dur = 500
         
         function zoomed() {
-            //hourly_x.domain([1, 365/d3.event.scale])
-            
-            hourly_timeseries_frame_svg.select(".x.axis").call(hourly_x_axis)
-            
-            hourly_timeseries_min.attr("d", hourly_line_total_min)
-            hourly_timeseries_max.attr("d", hourly_line_total_max)
-            hourly_timeseries_avg.attr("d", hourly_line_total_avg)
-            hourly_timeseries_total.attr("d", hourly_line_total)
-            console.log(d3.event.translate)
-            
+            console.log(hourly_x.domain())
             if (d3.event.scale > 10 && !was_zoomed) {
+                hourly_x_axis.tickFormat(d3.time.format('%m/%e %H:%S'));
                 hourly_timeseries_min.transition().duration(zoom_dur).attr("opacity", 0.2)
                 hourly_timeseries_max.transition().duration(zoom_dur).attr("opacity", 0.2)
                 hourly_timeseries_avg.transition().duration(zoom_dur).attr("opacity", 0.2)
                 hourly_timeseries_total.transition().duration(zoom_dur).attr("opacity", 1)
                 was_zoomed = true
             } else if (d3.event.scale <= 10 && was_zoomed) {
+                hourly_x_axis.tickFormat(d3.time.format('%b %e'));
                 hourly_timeseries_min.transition().duration(zoom_dur).attr("opacity", 1)
                 hourly_timeseries_max.transition().duration(zoom_dur).attr("opacity", 1)
                 hourly_timeseries_avg.transition().duration(zoom_dur).attr("opacity", 1)
                 hourly_timeseries_total.transition().duration(zoom_dur).attr("opacity", 0)
                 was_zoomed = false
             }
+            
+            hourly_timeseries_frame_svg.select(".x.axis").call(hourly_x_axis)
+            hourly_timeseries_min.attr("d", hourly_line_total_min)
+            hourly_timeseries_max.attr("d", hourly_line_total_max)
+            hourly_timeseries_avg.attr("d", hourly_line_total_avg)
+            hourly_timeseries_total.attr("d", hourly_line_total)
         }
     }
 
@@ -417,8 +416,7 @@ fill: brown;
         
     q.await(function(error, daily_raw, hourly_raw) {
         var daily_set = daily_raw.map(function(d) { 
-            var obj = {"day": +d.Day, "total":{min:0.0, max:0.0, avg:0.0}}
-            assert(!isNaN(obj.day), "Parse day failed: " + d)
+            var obj = {"day": new Date(+d.Day*24*60*60*1000), "total":{min:0.0, max:0.0, avg:0.0}}
             components.forEach(function (component) {
                 var comp_obj = parse_component_daily(d, component)
                 obj.total.min += comp_obj.min
@@ -433,8 +431,7 @@ fill: brown;
             return obj
         })
         var hourly_set = hourly_raw.map(function(d) { 
-            var obj = {"day": +d.Day + d.Hour/24.0, "total":0.0}
-            assert(!isNaN(obj.day), "Parse day failed: " + d)
+            var obj = {"day": new Date((+d.Day*24*60*60*1000) + (+d.Hour*60*60*1000)), "total":0.0}
             components.forEach(function (component) {
                 obj[component] = +d[component + "Hourly"]
                 obj.total += obj[component]
