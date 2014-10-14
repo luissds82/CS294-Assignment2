@@ -7,6 +7,8 @@
 	<title>Assignment 3</title>
 	<script src="http://d3js.org/d3.v3.min.js"> </script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="http://d3js.org/queue.v1.min.js"></script>
+    <!--https://stackoverflow.com/questions/21192436/loading-multiple-csv-in-dc-js-adding-a-value-and-concatenating-the-results-int-->
 </head>
 
 <style>
@@ -253,11 +255,6 @@ fill: brown;
             .attr("opacity", 1)
     }
     
-    function on_daily_data(error, rows) {
-        console.log(rows)
-        on_daily_timeseries_data(rows);
-    }
-    
    function on_hourly_timeseries_data(data) {
         hourly_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
@@ -292,9 +289,7 @@ fill: brown;
             .attr("opacity", 1)
     }
 
-    function on_hourly_data(error, rows) {
-        console.log(rows)
-        on_hourly_timeseries_data(rows);
+    function on_hourly_bar(rows) {
         //Making the aggregate sum across each object in the array
        Array.prototype.sum = function (property) {
             var total = 0;
@@ -367,12 +362,15 @@ fill: brown;
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "12px") 
                         .attr("fill", "black");
-
         // TODO: Fix bar chart rendering -  problems: pull it to the top;
     }
-    
-    d3.dsv(";", "text/plain")("data_set.csv")
-        .row(function(d) { 
+
+    var q = queue()
+        .defer(d3.dsv(";", "text/plain"), "data_set.csv")
+        .defer(d3.dsv(";", "text/plain"), "data_set_hourly.csv");
+        
+    q.await(function(error, daily_raw, hourly_raw) {
+        var daily_set = daily_raw.map(function(d) { 
             var obj = {"day": +d.Day, "total":{min:0.0, max:0.0, avg:0.0}}
             assert(!isNaN(obj.day), "Parse day failed: " + d)
             components.forEach(function (component) {
@@ -387,10 +385,8 @@ fill: brown;
             })
             
             return obj
-        }).get(on_daily_data);
-             
-    d3.dsv(";", "text/plain")("data_set_hourly.csv")
-        .row(function(d) { 
+        })
+        var hourly_set = hourly_raw.map(function(d) { 
             var obj = {"day": +d.Day + d.Hour/24.0, "total":0.0}
             assert(!isNaN(obj.day), "Parse day failed: " + d)
             components.forEach(function (component) {
@@ -399,8 +395,16 @@ fill: brown;
                 assert(!isNaN(obj[component]), "Failed to parse hourly " + component)
             })
             return obj
-        }).get(on_hourly_data);
-             
+        })
+        
+        // Render Daily Data
+        on_daily_timeseries_data(daily_set);
+                
+        // Render Hourly Data
+        on_hourly_timeseries_data(hourly_set);
+        on_hourly_bar(hourly_set);
+    })
+
 	</script>
 
 </body>
