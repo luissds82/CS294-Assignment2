@@ -8,6 +8,7 @@
 	<script src="http://d3js.org/d3.v3.min.js"> </script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script type="text/javascript" src="http://d3js.org/queue.v1.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script> <!-- loading d3-tip toolkit -->
     <!--https://stackoverflow.com/questions/21192436/loading-multiple-csv-in-dc-js-adding-a-value-and-concatenating-the-results-int-->
 </head>
 
@@ -46,6 +47,36 @@ fill: brown;
  transition: fill .25s linear;
     -moz-transition: fill .25s linear;
     -webkit-transition: fill .25s linear;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-size: 0.75em;
+  font-family: sans-serif;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 5px;
+}
+
+/* Creates a small triangle extender for the tooltip - in: http://bl.ocks.org/Caged/6476579 */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 14px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -2px 0 0 0;
+  top: 100%;
+  left: 0;
 }
 
 </style>
@@ -202,7 +233,7 @@ fill: brown;
         .y(function(d) { return hourly_y(d.total.avg); });
     var hourly_line_total = d3.svg.line()
         .x(function(d) { return hourly_x(d.day); })
-        .y(function(d) { return hourly_y(d.total); });    
+        .y(function(d) { return hourly_y(d.total); }); 
         
     // Load datasets
     // Returns an object of {min: ..., max:..., avg:...} parsed from the row.
@@ -351,17 +382,32 @@ fill: brown;
         var totalLight= (rows.sum("Lighting"));
         var totalPlugLoads= (rows.sum("PlugLoads"));
         var totalEnergy= totalCooling + totalHeating + totalLight + totalPlugLoads 
+        var coolingPerc= Math.round((totalCooling * 100)/totalEnergy);
+        var heatingPerc= Math.round((totalHeating * 100)/totalEnergy);
+        var lightPerc= Math.round((totalLight * 100)/totalEnergy);
+        var loadsPerc= Math.round((totalPlugLoads * 100)/totalEnergy);
+        var totalPerc= 100;  
+
         console.log(totalCooling);
         console.log(totalHeating);
         console.log(totalLight);
         console.log(totalPlugLoads);
         console.log(totalEnergy);
 
-        var barChartArray = [{name: "Cooling", value: totalCooling},{name: "Heating", value: totalHeating},{name: "Lighting", value: totalLight},{name:"Plug Loads", value:totalPlugLoads},{name:"Total", value:totalEnergy}];
+        var barChartArray = [{name: "Cooling", value: totalCooling, y: coolingPerc},{name: "Heating", value: totalHeating, "y": heatingPerc},{name: "Lighting", value: totalLight, y: lightPerc},{name:"Plug Loads", value: totalPlugLoads, y: loadsPerc},{name:"Total", value:totalEnergy, y: totalPerc}];
 
         console.log(barChartArray);
 
-        bar_graph_svg.selectAll("rect")
+        var tip = d3.tip()
+          .attr('class', 'd3-tip')
+          .offset([-5, 0])
+          .html(function(d) {
+            return d.name + " " + "Consumption: <span>" + Math.round(d.value * 10)/10 + " " + "kW" + "</span>";
+          });
+
+        bar_graph_svg.call(tip);
+
+        bar_graph_svg.selectAll(".bar")
                         .data(barChartArray)
                         .enter()
                         .append("rect")
@@ -374,7 +420,9 @@ fill: brown;
                             return d.value / 20;
                         })
                         .attr("height", bars_totalwidth / barChartArray.length - barPadding) 
-                        .attr("fill", "teal");
+                        .attr("fill", "teal")
+                        .on('mouseover', tip.show)
+                        .on('mouseout', tip.hide);
 
         var texts =  bar_graph_svg.selectAll("text")
                         .data(barChartArray)
@@ -382,7 +430,7 @@ fill: brown;
 
                         texts.append("text")
                         .text(function (d) {
-                            return Math.round (d.value);
+                            return d.y + " " + "%";
                         })
                         .attr("text-anchor", "middle")
                         .attr("x", function (d){
