@@ -160,11 +160,12 @@ fill: brown;
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom")
-        .tickFormat(d3.time.format('%b %e'));
+        .tickFormat(d3.time.format('%b %e'))
+        .ticks(7)
     var daily_y_axis = d3.svg.axis()
         .scale(daily_y)
         .orient("left")
-        .tickFormat(d3.format('.1f'));
+        .tickFormat(d3.format('.1f'))
     var daily_line_total_min = d3.svg.line()
         .x(function(d) { return daily_x(d.day); })
         .y(function(d) { return daily_y(d.total.min); });
@@ -184,11 +185,12 @@ fill: brown;
     var hourly_x_axis = d3.svg.axis()
         .scale(hourly_x)
         .orient("bottom")
-        .tickFormat(d3.time.format('%b %e'));
+        .tickFormat(d3.time.format('%b %e'))
+        .ticks(7)
     var hourly_y_axis = d3.svg.axis()
         .scale(hourly_y)
         .orient("left")
-        .tickFormat(d3.format('.1f'));
+        .tickFormat(d3.format('.1f'))
     var hourly_line_total_min = d3.svg.line()
         .x(function(d) { return hourly_x(d.day); })
         .y(function(d) { return hourly_y(d.total.min); });
@@ -311,7 +313,7 @@ fill: brown;
         function zoomed() {
             console.log(hourly_x.domain())
             if (d3.event.scale > 10 && !was_zoomed) {
-                hourly_x_axis.tickFormat(d3.time.format('%m/%e %H:%S'));
+                hourly_x_axis.tickFormat(d3.time.format('%b%e %H:%S'));
                 hourly_timeseries_min.transition().duration(zoom_dur).attr("opacity", 0.2)
                 hourly_timeseries_max.transition().duration(zoom_dur).attr("opacity", 0.2)
                 hourly_timeseries_avg.transition().duration(zoom_dur).attr("opacity", 0.2)
