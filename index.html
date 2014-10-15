@@ -147,7 +147,7 @@ fill: #009966; <!-- #a17f1a -->
     var timeseries_height = timeseries_total_height - plot_margin;
     var timeseries_overview_height = timeseries_overview_total_height - plot_margin;
     
-    var barGraphWidth = screenWidth - timeseries_total_width; 
+    var barGraphWidth = screenWidth - timeseries_total_width - plot_margin2; 
 
 	//SVG Canvas for each graph
 	var daily_timeseries_frame_svg = rezised_body.append("svg")
@@ -162,7 +162,9 @@ fill: #009966; <!-- #a17f1a -->
         .attr("x", (timeseries_total_width / 2))             
         .attr("y", 16)
         .attr("text-anchor", "middle")  
-        .text("Overview");
+        .text("Overview")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "16px");
         
 	var hourly_timeseries_frame_svg = rezised_body.append("svg")
 		.attr("width", timeseries_total_width)
@@ -185,21 +187,32 @@ fill: #009966; <!-- #a17f1a -->
         .attr("x", (timeseries_total_width / 2))             
         .attr("y", 16)
         .attr("text-anchor", "middle")  
-        .text("Simulated Energy vs. Date");
+        .text("Simulated Energy vs. Time")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "16px");
         
         
     var bar_graph_frame_svg = rezised_body.append("svg")
-        .attr("width", barGraphWidth - 35) //I have to subtract this value for the graph floats to the side. Do you think $(window).width() is the best way? - to fix
-        .attr("height", timeseries_total_height*2) // it should have the height of the two time series graph - - to fix
+        .attr("width", barGraphWidth)
+        .attr("height", timeseries_height*2) // it should have the height of the two time series graph - - to fix
         .style("float","left");
 
     var bar_graph_svg = bar_graph_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin2 + ",0)")
         .style("float","left");
+     bar_graph_svg.append("text") // the added title
+        .attr("x", barGraphWidth/2 - (plot_margin/2))             
+        .attr("y", timeseries_height/6)
+        .attr("text-anchor", "middle")  
+        .text("Energy Consumption by type")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "16px");
 
     var barPadding = 15;
 
-    var bars_totalwidth = (barGraphWidth - 35) - plot_margin2; //again teh 35px that I need to subtract to force the frame of the bar svg to be side by side - - to fix
+    var bars_totalwidth = (barGraphWidth) - plot_margin2;
+
+    var bars_totalheight = timeseries_total_height*2 - plot_margin2;
         
     // Axes
     var daily_x = d3.time.scale()
@@ -474,14 +487,18 @@ fill: #009966; <!-- #a17f1a -->
                         .enter()
                         .append("rect")
                         .attr("class", "bar")
-                        .attr("x", plot_margin2)
-                        .attr("y", function (d,i){
-                            return i*(bars_totalwidth / barChartArray.length);
-                        })
+                        .attr("x", function (d,i){
+                         return i*(bars_totalwidth / barChartArray.length);
+                         })
+                        .attr("y", function (d) {
+                            return (timeseries_height) - (d.value / 20);
+                         })  
                         .attr("width", function(d){
-                            return d.value / 20;
+                            return bars_totalwidth / barChartArray.length - 10;
                         })
-                        .attr("height", bars_totalwidth / barChartArray.length - barPadding) 
+                        .attr("height", function(d){
+                            return (d.value / 20);
+                        }) 
                         .attr("fill", "teal")
                         .on('mouseover', function(d, i) {
                             tip.show(d,i)
@@ -533,12 +550,12 @@ fill: #009966; <!-- #a17f1a -->
                             return d.y + " " + "%";
                         })
                         .attr("text-anchor", "middle")
-                        .attr("x", function (d){
-                            return (d.value / 20)/2 + plot_margin2;
-                        })
-                        .attr("y", function (d,i){
-                            return i*(bars_totalwidth / barChartArray.length) + (bars_totalwidth / barChartArray.length - barPadding)/2;
-                        })
+                        .attr("x", function (d,i){
+                         return i*(bars_totalwidth / barChartArray.length);
+                         })
+                        .attr("y", function (d) {
+                            return (timeseries_height) - (d.value / 20);
+                         })
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "12px") 
                         .attr("fill", "white");
@@ -548,12 +565,12 @@ fill: #009966; <!-- #a17f1a -->
                             return d.name;
                         })
                         .attr("text-anchor", "right")
-                        .attr("x", function (d){
-                            return (d.value / 20) + plot_margin2 + 10;
-                        })
-                        .attr("y", function (d,i){
-                            return i*(bars_totalwidth / barChartArray.length) + (bars_totalwidth / barChartArray.length - barPadding)/2;
-                        })
+                        .attr("x", function (d,i){
+                         return i*(bars_totalwidth / barChartArray.length);
+                         })
+                        .attr("y", function (d) {
+                            return (timeseries_height) - (d.value / 20) - 10;
+                         })
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "12px") 
                         .attr("fill", "black");
