@@ -158,6 +158,11 @@ fill: #009966; <!-- #a17f1a -->
 	var daily_timeseries_svg = daily_timeseries_frame_svg.append("g")
         .attr("transform", "translate(" + plot_margin + ",0)")
         .style("float", "left");
+    daily_timeseries_svg.append("text")
+        .attr("x", (timeseries_total_width / 2))             
+        .attr("y", 16)
+        .attr("text-anchor", "middle")  
+        .text("Overview");
         
 	var hourly_timeseries_frame_svg = rezised_body.append("svg")
 		.attr("width", timeseries_total_width)
@@ -176,6 +181,13 @@ fill: #009966; <!-- #a17f1a -->
 		.attr("clip-path", "url(#clip)")
         .style("float", "left");
 
+    hourly_timeseries_svg.append("text")
+        .attr("x", (timeseries_total_width / 2))             
+        .attr("y", 16)
+        .attr("text-anchor", "middle")  
+        .text("Simulated Energy vs. Date");
+        
+        
     var bar_graph_frame_svg = rezised_body.append("svg")
         .attr("width", barGraphWidth - 35) //I have to subtract this value for the graph floats to the side. Do you think $(window).width() is the best way? - to fix
         .attr("height", timeseries_total_height*2) // it should have the height of the two time series graph - - to fix
@@ -199,12 +211,11 @@ fill: #009966; <!-- #a17f1a -->
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom")
-        .tickFormat(d3.time.format('%b %e'))
-        .ticks(7)
+        .tickFormat(d3.time.format('%b'))
     var daily_y_axis = d3.svg.axis()
         .scale(daily_y)
         .orient("left")
-        .tickFormat(d3.format('.1f'))
+        .ticks(0)
     var daily_line_total_min = d3.svg.line()
         .x(function(d) { return daily_x(d.day); })
         .y(function(d) { return daily_y(d.total.min); });
@@ -299,26 +310,11 @@ fill: #009966; <!-- #a17f1a -->
             .attr("class", "x axis")
             .attr("transform", "translate(" + plot_margin + "," + timeseries_overview_height + ")")
             .call(daily_x_axis)
-        .append("text")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "12px") 
-            .style("text-anchor", "end")
-            .text("Day");
             
         daily_timeseries_frame_svg.append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + plot_margin + ",0)")
             .call(daily_y_axis)
-        .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "12px") 
-            .style("text-anchor", "end")
-            .text("Energy");
             
         daily_timeseries_svg.append("path")
             .datum(data)
@@ -343,13 +339,7 @@ fill: #009966; <!-- #a17f1a -->
             .attr("class", "x axis")
             .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
             .call(hourly_x_axis)
-        .append("text")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "12px") 
-            .style("text-anchor", "end")
-            .text("Day");     
+    
         hourly_timeseries_frame_svg.append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + plot_margin + ",0)")
@@ -358,10 +348,8 @@ fill: #009966; <!-- #a17f1a -->
             .attr("transform", "rotate(-90)")
             .attr("y", 6)
             .attr("dy", ".71em")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "12px") 
             .style("text-anchor", "end")
-            .text("Energy");
+            .text("Energy (kW)");
             
         var hourly_timeseries_min = hourly_timeseries_svg.append("path")
             .datum(daily_data)
