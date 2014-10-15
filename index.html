@@ -496,7 +496,6 @@ fill: gold;
                         .attr("height", bars_totalwidth / barChartArray.length - barPadding) 
                         .attr("fill", "teal")
                         .on('mouseover', function(d, i) {
-                            console.log(d.name)
                             tip.show(d,i)
                             daily_line_selected_avg
                                 .y(function(ld) { return daily_y(ld[d.name].avg); })
