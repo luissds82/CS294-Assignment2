@@ -250,16 +250,16 @@ fill: #009966; <!-- #a17f1a -->
         
     var daily_hidden_lower = daily_timeseries_svg.append("rect")
         .attr("x", 0)
-        .attr("y", 0)
+        .attr("y", timeseries_overview_height*0.2)
         .attr("width", 0)
-        .attr("height", timeseries_overview_height)
+        .attr("height", timeseries_overview_height*0.8)
         .attr("opacity", 0.1);
 
     var daily_hidden_upper = daily_timeseries_svg.append("rect")
         .attr("x", timeseries_width)
-        .attr("y", 0)
+        .attr("y", timeseries_overview_height*0.2)
         .attr("width", timeseries_width)
-        .attr("height", timeseries_overview_height)
+        .attr("height", timeseries_overview_height*0.8)
         .attr("opacity", 0.1);
         
     var hourly_x = d3.time.scale()
