@@ -184,13 +184,20 @@ fill: #009966; <!-- #a17f1a -->
         .style("float", "left");
 
     hourly_timeseries_svg.append("text")
-        .attr("x", (timeseries_total_width / 2))             
+        .attr("x", (timeseries_width / 2))             
         .attr("y", 16)
         .attr("text-anchor", "middle")  
         .text("Simulated Energy vs. Time")
         .attr("font-family", "sans-serif")
         .attr("font-size", "16px");
-        
+
+    var instructions = hourly_timeseries_svg.append("text")
+        .attr("x", timeseries_width)
+        .attr("y", 16)
+        .attr("text-anchor", "end")  
+        .text("Zoom in (mousewheel) for hourly data")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "12px");        
         
     var bar_graph_frame_svg = rezised_body.append("svg")
         .attr("width", barGraphWidth)
@@ -404,6 +411,7 @@ fill: #009966; <!-- #a17f1a -->
                 hourly_timeseries_max.transition().duration(zoom_dur).attr("opacity", 0.2)
                 hourly_timeseries_avg.transition().duration(zoom_dur).attr("opacity", 0.2)
                 hourly_timeseries_total.transition().duration(zoom_dur).attr("opacity", 1)
+                instructions.text("Zoom out (mousewheel) for daily summary");
                 was_zoomed = true
             } else if (d3.event.scale <= 10 && was_zoomed) {
                 hourly_x_axis.tickFormat(d3.time.format('%b %e'));
@@ -411,6 +419,7 @@ fill: #009966; <!-- #a17f1a -->
                 hourly_timeseries_max.transition().duration(zoom_dur).attr("opacity", 1)
                 hourly_timeseries_avg.transition().duration(zoom_dur).attr("opacity", 1)
                 hourly_timeseries_total.transition().duration(zoom_dur).attr("opacity", 0)
+                instructions.text("Zoom in (mousewheel) for hourly data");
                 was_zoomed = false
             }
             
