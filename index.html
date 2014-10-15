@@ -357,7 +357,6 @@ fill: brown;
         var zoom_dur = 500
         
         function zoomed() {
-            console.log(hourly_x.domain())
             if (d3.event.scale > 10 && !was_zoomed) {
                 hourly_x_axis.tickFormat(d3.time.format('%b%e %H:%S'));
                 hourly_timeseries_min.transition().duration(zoom_dur).attr("opacity", 0.2)
@@ -379,7 +378,7 @@ fill: brown;
             hourly_timeseries_max.attr("d", hourly_line_total_max)
             hourly_timeseries_avg.attr("d", hourly_line_total_avg)
             hourly_timeseries_total.attr("d", hourly_line_total)
-
+            
             function min(a, b) {
                 if (a < b) {
                     return a
@@ -394,8 +393,10 @@ fill: brown;
             }}
             
             daily_hidden_lower
+                .transition().duration(100)
                 .attr("width", max(0, daily_x(hourly_x.domain()[0])))
             daily_hidden_upper
+                .transition().duration(100)
                 .attr("x", max(0, daily_x(hourly_x.domain()[1])))
         }
     }
