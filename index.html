@@ -140,8 +140,8 @@ fill: #009966; <!-- #a17f1a -->
 
     // sizes including framing
     var timeseries_total_width = calcLineGraphWidth();
-    var timeseries_total_height = screenHeight / 10 * 9;
-    var timeseries_overview_total_height = screenHeight / 10;
+    var timeseries_total_height = screenHeight / 10 * 6.5;
+    var timeseries_overview_total_height = screenHeight / 6.5;
     // raw plot size
     var timeseries_width = timeseries_total_width - plot_margin;
     var timeseries_height = timeseries_total_height - plot_margin;
@@ -162,7 +162,7 @@ fill: #009966; <!-- #a17f1a -->
         .attr("x", (timeseries_total_width / 2))             
         .attr("y", plot_margin/2)
         .attr("text-anchor", "middle")  
-        .text("Overview")
+        .text("Annual Energy Overview")
         .attr("font-family", "sans-serif")
         .attr("font-size", "16px");
         
@@ -185,7 +185,7 @@ fill: #009966; <!-- #a17f1a -->
 
     hourly_timeseries_svg.append("text")
         .attr("x", (timeseries_width / 2))             
-        .attr("y", 16)
+        .attr("y", plot_margin/2)
         .attr("text-anchor", "middle")  
         .text("Simulated Energy vs. Time")
         .attr("font-family", "sans-serif")
@@ -193,15 +193,15 @@ fill: #009966; <!-- #a17f1a -->
 
     var instructions = hourly_timeseries_svg.append("text")
         .attr("x", timeseries_width)
-        .attr("y", 16)
+        .attr("y", plot_margin)
         .attr("text-anchor", "end")  
         .text("Zoom in (mousewheel) for hourly data")
         .attr("font-family", "sans-serif")
         .attr("font-size", "12px");        
         
     var bar_graph_frame_svg = rezised_body.append("svg")
-        .attr("width", barGraphWidth-35)
-        .attr("height", timeseries_height*2) // it should have the height of the two time series graph - - to fix
+        .attr("width", barGraphWidth)
+        .attr("height", timeseries_height*2)
         .style("float","left");
 
     var bar_graph_svg = bar_graph_frame_svg.append("g")
@@ -209,7 +209,7 @@ fill: #009966; <!-- #a17f1a -->
         .style("float","left");
      bar_graph_svg.append("text") // the added title
         .attr("x", barGraphWidth/2 - (plot_margin/2))             
-        .attr("y", 16)
+        .attr("y", plot_margin/2)
         .attr("text-anchor", "middle")  
         .text("Energy Consumption by type")
         .attr("font-family", "sans-serif")
@@ -225,7 +225,7 @@ fill: #009966; <!-- #a17f1a -->
         .range([0, timeseries_width]);
     var daily_y = d3.scale.linear()
         .domain([0, 4])
-        .range([timeseries_overview_height, 0]);
+        .range([timeseries_overview_height, timeseries_overview_height*0.2]); // just to remove the overlapping between title and graph
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom")
@@ -253,20 +253,21 @@ fill: #009966; <!-- #a17f1a -->
         .attr("y", 0)
         .attr("width", 0)
         .attr("height", timeseries_overview_height)
-        .attr("opacity", 0.1)
+        .attr("opacity", 0.1);
+
     var daily_hidden_upper = daily_timeseries_svg.append("rect")
         .attr("x", timeseries_width)
         .attr("y", 0)
         .attr("width", timeseries_width)
         .attr("height", timeseries_overview_height)
-        .attr("opacity", 0.1)
+        .attr("opacity", 0.1);
         
     var hourly_x = d3.time.scale()
         .domain([new Date(0), new Date(365*24*60*60*1000)])
         .range([0, timeseries_width]);
     var hourly_y = d3.scale.linear()
         .domain([0, 4])
-        .range([timeseries_height, 0]);
+        .range([timeseries_height, timeseries_height*0.1]); // just to remove the overlapping between title and graph
     var hourly_x_axis = d3.svg.axis()
         .scale(hourly_x)
         .orient("bottom")
@@ -296,7 +297,7 @@ fill: #009966; <!-- #a17f1a -->
         .x(function(d) { return hourly_x(d.day); })
         .y(function(d) { return hourly_y(d.total); }); 
         
-    // cross timeseries/bar graph communiations here
+    // cross timeseries/bar graph communications here
     var was_zoomed = false
     var daily_timeseries_selected_avg = daily_timeseries_svg.append("path")
         .attr("class", "selected_line")
@@ -365,8 +366,11 @@ fill: #009966; <!-- #a17f1a -->
         .append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", 6)
+            .attr("x", -timeseries_height*0.1)
             .attr("dy", ".71em")
             .style("text-anchor", "end")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "12px")
             .text("Energy (kW)");
             
         var hourly_timeseries_min = hourly_timeseries_svg.append("path")
@@ -476,11 +480,16 @@ fill: #009966; <!-- #a17f1a -->
         console.log(totalPlugLoads);
         console.log(totalEnergy);
 
-       var barChartArray = [{name:"Cooling", value: totalCooling, y: coolingPerc},{name:"Heating", value: totalHeating, y: heatingPerc},{name:"Lighting", value: totalLight, y: lightPerc},{name:"Plug Loads", value: totalPlugLoads, y: loadsPerc},{name:"Total", value:totalEnergy, y: totalPerc}];
+        var barChartArray = [{name:"Cooling", value: totalCooling, y: coolingPerc},
+                            {name:"Heating", value: totalHeating, y: heatingPerc},
+                            {name:"Lighting", value: totalLight, y: lightPerc},
+                            {name:"PlugLoads", value: totalPlugLoads, y: loadsPerc},
+                            {name:"Total", value:totalEnergy, y: totalPerc}];
+
 
        var barValue = d3.scale.linear()
         .domain([0, d3.max(barChartArray, function(d) {return d.value})])
-        .range([0, (timeseries_height - (timeseries_height/10))]);
+        .range([0, timeseries_height*0.9]);
 
         var tip = d3.tip()
           .attr('class', 'd3-tip')
@@ -491,7 +500,7 @@ fill: #009966; <!-- #a17f1a -->
 
         bar_graph_svg.call(tip);
 
-        bar_graph_svg.selectAll(".bar")
+        bar_graph_svg.selectAll(".bars")
                         .data(barChartArray)
                         .enter()
                         .append("rect")
@@ -516,7 +525,7 @@ fill: #009966; <!-- #a17f1a -->
                             daily_timeseries_selected_avg
                                 .attr("d", daily_line_selected_avg)
                                 .transition()
-                                .attr("opacity", 1)
+                                .attr("opacity", 1);
                                 
                             hourly_line_selected_avg
                                 .y(function(ld) { return hourly_y(ld[d.name].avg); })
@@ -548,14 +557,15 @@ fill: #009966; <!-- #a17f1a -->
                                 .transition().attr("opacity", 0)
                             hourly_timeseries_selected
                                 .transition().attr("opacity", 0)
-                        })
+                        });
 
-        var texts =  bar_graph_svg.selectAll("text")
+        var texts = bar_graph_svg.selectAll("g")
                         .data(barChartArray)
                         .enter();
+
                         texts.append("text")
                         .text(function (d) {
-                            return d.y + " " + "%";
+                            return d.y + "%";
                         })
                         .attr("text-anchor", "middle")
                         .attr("x", function (d,i) { 
@@ -568,7 +578,7 @@ fill: #009966; <!-- #a17f1a -->
                         .attr("font-size", "12px") 
                         .attr("fill", "white");
 
-                       texts.append("text")
+                        texts.append("text")
                         .text(function (d) {
                             return d.name;
                         })
@@ -582,6 +592,81 @@ fill: #009966; <!-- #a17f1a -->
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "12px") 
                         .attr("fill", "black");
+
+                        texts.append("text") // Legend start here until the end of this function
+                        .text("Daily Maximum")
+                        .attr("x", barGraphWidth*0.04)
+                        .attr("y", timeseries_height*0.1)
+                        .attr("text-anchor", "right")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "11px");
+
+                        texts.append("text")
+                        .text("Daily Average")
+                        .attr("x", barGraphWidth*0.04)
+                        .attr("y", timeseries_height*0.125)
+                        .attr("text-anchor", "right")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "11px");
+
+                        texts.append("text")
+                        .text("Daily Minimum")
+                        .attr("x", barGraphWidth*0.04)
+                        .attr("y", timeseries_height*0.15)
+                        .attr("text-anchor", "right")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "11px");
+
+                        texts.append("text")
+                        .text("Hourly energy consumption")
+                        .attr("x", barGraphWidth*0.04)
+                        .attr("y", timeseries_height*0.175)
+                        .attr("text-anchor", "right")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "11px");
+
+                        texts.append("text")
+                        .text("Hourly energy consumption by type")
+                        .attr("x", barGraphWidth*0.04)
+                        .attr("y", timeseries_height*0.2)
+                        .attr("text-anchor", "right")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "11px");
+
+                        bar_graph_svg.append("line")
+                        .attr ("x1", 0)
+                        .attr ("y1", timeseries_height*0.09)
+                        .attr ("x2", barGraphWidth*0.035)
+                        .attr ("y2", timeseries_height*0.09)
+                        .attr ("class", "daily_line max");
+
+                        bar_graph_svg.append("line")
+                        .attr ("x1", 0)
+                        .attr ("y1", timeseries_height*0.115)
+                        .attr ("x2", barGraphWidth*0.035)
+                        .attr ("y2", timeseries_height*0.115)
+                        .attr ("class", "daily_line avg");
+
+                        bar_graph_svg.append("line")
+                        .attr ("x1", 0)
+                        .attr ("y1", timeseries_height*0.145)
+                        .attr ("x2", barGraphWidth*0.035)
+                        .attr ("y2", timeseries_height*0.145)
+                        .attr ("class", "daily_line min");
+
+                        bar_graph_svg.append("line")
+                        .attr ("x1", 0)
+                        .attr ("y1", timeseries_height*0.165)
+                        .attr ("x2", barGraphWidth*0.035)
+                        .attr ("y2", timeseries_height*0.165)
+                        .attr ("class", "hourly_line");
+
+                        bar_graph_svg.append("line")
+                        .attr ("x1", 0)
+                        .attr ("y1", timeseries_height*0.19)
+                        .attr ("x2", barGraphWidth*0.035)
+                        .attr ("y2", timeseries_height*0.19)
+                        .attr ("class", "selected_line");
     }
 
     var now = new Date()
