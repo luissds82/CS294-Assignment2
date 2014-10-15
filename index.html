@@ -26,6 +26,12 @@
   stroke-width: 1.0px;
 }
 
+.selected_line {
+  fill: none;
+  stroke: gold;
+  stroke-width: 1.0px;
+}
+
 .daily_line {
   fill: none;
   stroke-width: 0.5px;
@@ -43,7 +49,7 @@
 }
 
 .bar:hover {
-fill: brown;
+fill: gold;
  transition: fill .25s linear;
     -moz-transition: fill .25s linear;
     -webkit-transition: fill .25s linear;
@@ -209,6 +215,10 @@ fill: brown;
         .x(function(d) { return daily_x(d.day); })
         .y(function(d) { return daily_y(d.total.avg); });
         
+    var daily_line_selected_avg = d3.svg.line()
+        .x(function(d) { return daily_x(d.day); })
+        .y(function(d) { return daily_y(d.total.avg); }); 
+        
     var daily_hidden_lower = daily_timeseries_svg.append("rect")
         .attr("x", 0)
         .attr("y", 0)
@@ -250,6 +260,25 @@ fill: brown;
         .x(function(d) { return hourly_x(d.day); })
         .y(function(d) { return hourly_y(d.total); }); 
         
+    var hourly_line_selected_avg = d3.svg.line()
+        .x(function(d) { return hourly_x(d.day); })
+        .y(function(d) { return hourly_y(d.total.avg); }); 
+    var hourly_line_selected = d3.svg.line()
+        .x(function(d) { return hourly_x(d.day); })
+        .y(function(d) { return hourly_y(d.total); }); 
+        
+    // cross timeseries/bar graph communiations here
+    var was_zoomed = false
+    var daily_timeseries_selected_avg = daily_timeseries_svg.append("path")
+        .attr("class", "selected_line")
+        .attr("opacity", 0);
+    var hourly_timeseries_selected = hourly_timeseries_svg.append("path")
+        .attr("class", "selected_line")
+        .attr("opacity", 0);
+    var hourly_timeseries_selected_avg = hourly_timeseries_svg.append("path")
+        .attr("class", "selected_line")
+        .attr("opacity", 0);
+    
     // Load datasets
     // Returns an object of {min: ..., max:..., avg:...} parsed from the row.
     function parse_component_daily(row_record, component_name) {
@@ -303,6 +332,10 @@ fill: brown;
             .datum(data)
             .attr("class", "daily_line avg")
             .attr("d", daily_line_total_avg)
+            
+        daily_timeseries_selected_avg
+            .datum(data)
+            .attr("d", daily_line_selected_avg)
     }
     
    function on_hourly_timeseries_data(daily_data, hourly_data) {
@@ -348,12 +381,19 @@ fill: brown;
             .attr("d", hourly_line_total)
             .attr("opacity", 0);
             
+        hourly_timeseries_selected
+            .datum(hourly_data)
+            .attr("d", hourly_line_selected)
+        hourly_timeseries_selected_avg
+            .datum(daily_data)
+            .attr("d", hourly_line_selected_avg)
+            
         var zoom = d3.behavior.zoom()
             .x(hourly_x)
             .scaleExtent([1, 200])
             .on("zoom", zoomed);
         hourly_timeseries_frame_svg.call(zoom);
-        var was_zoomed = false
+
         var zoom_dur = 500
         
         function zoomed() {
@@ -428,7 +468,7 @@ fill: brown;
         console.log(totalPlugLoads);
         console.log(totalEnergy);
 
-        var barChartArray = [{name: "Cooling", value: totalCooling, y: coolingPerc},{name: "Heating", value: totalHeating, "y": heatingPerc},{name: "Lighting", value: totalLight, y: lightPerc},{name:"Plug Loads", value: totalPlugLoads, y: loadsPerc},{name:"Total", value:totalEnergy, y: totalPerc}];
+        var barChartArray = [{name: "Cooling", value: totalCooling, y: coolingPerc},{name: "Heating", value: totalHeating, "y": heatingPerc},{name: "Lighting", value: totalLight, y: lightPerc},{name:"PlugLoads", value: totalPlugLoads, y: loadsPerc},{name:"total", value:totalEnergy, y: totalPerc}];
 
         console.log(barChartArray);
 
@@ -455,8 +495,47 @@ fill: brown;
                         })
                         .attr("height", bars_totalwidth / barChartArray.length - barPadding) 
                         .attr("fill", "teal")
-                        .on('mouseover', tip.show)
-                        .on('mouseout', tip.hide);
+                        .on('mouseover', function(d, i) {
+                            console.log(d.name)
+                            tip.show(d,i)
+                            daily_line_selected_avg
+                                .y(function(ld) { return daily_y(ld[d.name].avg); })
+                            daily_timeseries_selected_avg
+                                .attr("d", daily_line_selected_avg)
+                                .transition()
+                                .attr("opacity", 1)
+                                
+                            hourly_line_selected_avg
+                                .y(function(ld) { return hourly_y(ld[d.name].avg); })
+                            hourly_timeseries_selected_avg
+                                .attr("d", hourly_line_selected_avg)
+                                
+                            if (was_zoomed) {
+                                hourly_timeseries_selected_avg
+                                    .transition()
+                                    .attr("opacity", 0.2)
+                                    
+                                hourly_line_selected
+                                    .y(function(ld) { return hourly_y(ld[d.name]); })
+                                hourly_timeseries_selected
+                                    .attr("d", hourly_line_selected)
+                                    .transition()
+                                    .attr("opacity", 1)
+                            } else {
+                                hourly_timeseries_selected_avg
+                                    .transition()
+                                    .attr("opacity", 1)
+                            }
+                        })
+                        .on('mouseout', function(d, i) {
+                            tip.hide(d, i)
+                            daily_timeseries_selected_avg
+                                .transition().attr("opacity", 0)
+                            hourly_timeseries_selected_avg
+                                .transition().attr("opacity", 0)
+                            hourly_timeseries_selected
+                                .transition().attr("opacity", 0)
+                        });
 
         var texts =  bar_graph_svg.selectAll("text")
                         .data(barChartArray)
