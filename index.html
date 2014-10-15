@@ -134,17 +134,19 @@ fill: brown;
 
     // sizes including framing
     var timeseries_total_width = calcLineGraphWidth();
-    var timeseries_total_height = screenHeight / 2;
+    var timeseries_total_height = screenHeight / 10 * 9;
+    var timeseries_overview_total_height = screenHeight / 10;
     // raw plot size
     var timeseries_width = timeseries_total_width - plot_margin;
     var timeseries_height = timeseries_total_height - plot_margin;
+    var timeseries_overview_height = timeseries_overview_total_height - plot_margin;
     
     var barGraphWidth = screenWidth - timeseries_total_width; 
 
 	//SVG Canvas for each graph
 	var daily_timeseries_frame_svg = rezised_body.append("svg")
 		.attr("width", timeseries_total_width)
-		.attr("height", timeseries_total_height)
+		.attr("height", timeseries_overview_total_height)
 		.style("float", "left"); // the trick to make them side by side
 
 	var daily_timeseries_svg = daily_timeseries_frame_svg.append("g")
@@ -187,7 +189,7 @@ fill: brown;
         .range([0, timeseries_width]);
     var daily_y = d3.scale.linear()
         .domain([0, 4])
-        .range([timeseries_height, 0]);
+        .range([timeseries_overview_height, 0]);
     var daily_x_axis = d3.svg.axis()
         .scale(daily_x)
         .orient("bottom")
@@ -206,7 +208,20 @@ fill: brown;
     var daily_line_total_avg = d3.svg.line()
         .x(function(d) { return daily_x(d.day); })
         .y(function(d) { return daily_y(d.total.avg); });
-
+        
+    var daily_hidden_lower = daily_timeseries_svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 0)
+        .attr("height", timeseries_overview_height)
+        .attr("opacity", 0.1)
+    var daily_hidden_upper = daily_timeseries_svg.append("rect")
+        .attr("x", timeseries_width)
+        .attr("y", 0)
+        .attr("width", timeseries_width)
+        .attr("height", timeseries_overview_height)
+        .attr("opacity", 0.1)
+        
     var hourly_x = d3.time.scale()
         .domain([new Date(0), new Date(365*24*60*60*1000)])
         .range([0, timeseries_width]);
@@ -253,7 +268,7 @@ fill: brown;
     function on_daily_timeseries_data(data) {
        daily_timeseries_frame_svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(" + plot_margin + "," + timeseries_height + ")")
+            .attr("transform", "translate(" + plot_margin + "," + timeseries_overview_height + ")")
             .call(daily_x_axis)
         .append("text")
             .attr("y", 6)
@@ -364,6 +379,24 @@ fill: brown;
             hourly_timeseries_max.attr("d", hourly_line_total_max)
             hourly_timeseries_avg.attr("d", hourly_line_total_avg)
             hourly_timeseries_total.attr("d", hourly_line_total)
+
+            function min(a, b) {
+                if (a < b) {
+                    return a
+                } else {
+                    return b
+            }}
+            function max(a, b) {
+                if (a > b) {
+                    return a
+                } else {
+                    return b
+            }}
+            
+            daily_hidden_lower
+                .attr("width", max(0, daily_x(hourly_x.domain()[0])))
+            daily_hidden_upper
+                .attr("x", max(0, daily_x(hourly_x.domain()[1])))
         }
     }
 
