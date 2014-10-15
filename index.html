@@ -460,13 +460,17 @@ fill: brown;
         // TODO: Fix bar chart rendering -  problems: pull it to the top;
     }
 
+    var now = new Date()
+    
     var q = queue()
         .defer(d3.dsv(";", "text/plain"), "data_set.csv")
         .defer(d3.dsv(";", "text/plain"), "data_set_hourly.csv");
         
     q.await(function(error, daily_raw, hourly_raw) {
         var daily_set = daily_raw.map(function(d) { 
-            var obj = {"day": new Date(+d.Day*24*60*60*1000), "total":{min:0.0, max:0.0, avg:0.0}}
+            var time_ms = (+d.Day-1)*24*60*60*1000
+            assert(time_ms >= 0, time_ms + " <0!")
+            var obj = {"day": new Date(time_ms + now.getTimezoneOffset() * 60000), "total":{min:0.0, max:0.0, avg:0.0}}
             components.forEach(function (component) {
                 var comp_obj = parse_component_daily(d, component)
                 obj.total.min += comp_obj.min
@@ -481,7 +485,10 @@ fill: brown;
             return obj
         })
         var hourly_set = hourly_raw.map(function(d) { 
-            var obj = {"day": new Date((+d.Day*24*60*60*1000) + (+d.Hour*60*60*1000)), "total":0.0}
+            var time_ms = ((+d.Day-1 + (+d.Hour-1)/24)*24*60*60*1000)
+            assert(time_ms >= 0, time_ms + " <0!")
+            
+            var obj = {"day": new Date(time_ms + now.getTimezoneOffset() * 60000), "total":0.0}
             components.forEach(function (component) {
                 obj[component] = +d[component + "Hourly"]
                 obj.total += obj[component]
