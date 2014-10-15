@@ -160,7 +160,7 @@ fill: #009966; <!-- #a17f1a -->
         .style("float", "left");
     daily_timeseries_svg.append("text")
         .attr("x", (timeseries_total_width / 2))             
-        .attr("y", 16)
+        .attr("y", plot_margin/2)
         .attr("text-anchor", "middle")  
         .text("Overview")
         .attr("font-family", "sans-serif")
@@ -200,7 +200,7 @@ fill: #009966; <!-- #a17f1a -->
         .attr("font-size", "12px");        
         
     var bar_graph_frame_svg = rezised_body.append("svg")
-        .attr("width", barGraphWidth)
+        .attr("width", barGraphWidth-35)
         .attr("height", timeseries_height*2) // it should have the height of the two time series graph - - to fix
         .style("float","left");
 
@@ -209,17 +209,15 @@ fill: #009966; <!-- #a17f1a -->
         .style("float","left");
      bar_graph_svg.append("text") // the added title
         .attr("x", barGraphWidth/2 - (plot_margin/2))             
-        .attr("y", timeseries_height/6)
+        .attr("y", 16)
         .attr("text-anchor", "middle")  
         .text("Energy Consumption by type")
         .attr("font-family", "sans-serif")
         .attr("font-size", "16px");
 
-    var barPadding = 15;
-
     var bars_totalwidth = (barGraphWidth) - plot_margin2;
-
     var bars_totalheight = timeseries_total_height*2 - plot_margin2;
+    var barPadding = 10;
         
     // Axes
     var daily_x = d3.time.scale()
@@ -478,9 +476,11 @@ fill: #009966; <!-- #a17f1a -->
         console.log(totalPlugLoads);
         console.log(totalEnergy);
 
-        var barChartArray = [{name: "Cooling", value: totalCooling, y: coolingPerc},{name: "Heating", value: totalHeating, "y": heatingPerc},{name: "Lighting", value: totalLight, y: lightPerc},{name:"PlugLoads", value: totalPlugLoads, y: loadsPerc},{name:"total", value:totalEnergy, y: totalPerc}];
+       var barChartArray = [{name:"Cooling", value: totalCooling, y: coolingPerc},{name:"Heating", value: totalHeating, y: heatingPerc},{name:"Lighting", value: totalLight, y: lightPerc},{name:"Plug Loads", value: totalPlugLoads, y: loadsPerc},{name:"Total", value:totalEnergy, y: totalPerc}];
 
-        console.log(barChartArray);
+       var barValue = d3.scale.linear()
+        .domain([0, d3.max(barChartArray, function(d) {return d.value})])
+        .range([0, (timeseries_height - (timeseries_height/10))]);
 
         var tip = d3.tip()
           .attr('class', 'd3-tip')
@@ -500,13 +500,13 @@ fill: #009966; <!-- #a17f1a -->
                          return i*(bars_totalwidth / barChartArray.length);
                          })
                         .attr("y", function (d) {
-                            return (timeseries_height) - (d.value / 20);
+                            return timeseries_height - barValue(d.value);
                          })  
                         .attr("width", function(d){
                             return bars_totalwidth / barChartArray.length - 10;
                         })
                         .attr("height", function(d){
-                            return (d.value / 20);
+                            return barValue(d.value);
                         }) 
                         .attr("fill", "teal")
                         .on('mouseover', function(d, i) {
@@ -548,42 +548,40 @@ fill: #009966; <!-- #a17f1a -->
                                 .transition().attr("opacity", 0)
                             hourly_timeseries_selected
                                 .transition().attr("opacity", 0)
-                        });
+                        })
 
         var texts =  bar_graph_svg.selectAll("text")
                         .data(barChartArray)
                         .enter();
-
                         texts.append("text")
                         .text(function (d) {
                             return d.y + " " + "%";
                         })
                         .attr("text-anchor", "middle")
-                        .attr("x", function (d,i){
-                         return i*(bars_totalwidth / barChartArray.length);
-                         })
-                        .attr("y", function (d) {
-                            return (timeseries_height) - (d.value / 20);
-                         })
+                        .attr("x", function (d,i) { 
+                            return i*(bars_totalwidth / barChartArray.length) + (bars_totalwidth / barChartArray.length - barPadding)/2;
+                        })
+                        .attr("y", function (d,i){
+                            return timeseries_height - barValue(d.value) + (barValue(d.value)/2);
+                        })
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "12px") 
                         .attr("fill", "white");
 
-                        texts.append("text")
+                       texts.append("text")
                         .text(function (d) {
                             return d.name;
                         })
-                        .attr("text-anchor", "right")
+                        .attr("text-anchor", "middle")
                         .attr("x", function (d,i){
-                         return i*(bars_totalwidth / barChartArray.length);
+                            return i*(bars_totalwidth / barChartArray.length) + (bars_totalwidth / barChartArray.length - barPadding)/2;
                          })
                         .attr("y", function (d) {
-                            return (timeseries_height) - (d.value / 20) - 10;
+                            return timeseries_height - barValue(d.value) - (0.01*timeseries_height);
                          })
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "12px") 
                         .attr("fill", "black");
-        // TODO: Fix bar chart rendering -  problems: pull it to the top;
     }
 
     var now = new Date()
